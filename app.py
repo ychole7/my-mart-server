@@ -1,11 +1,14 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
-import json
-import re
+import os
 
 app = Flask(__name__)
 CORS(app)
+
+# ⚠️ 여기에 본인이 발급받은 키를 넣으세요!
+NAVER_CLIENT_ID = "JVXLTxKKG6ETmKg6Bo0V"
+NAVER_CLIENT_SECRET = "9JqlY6N21r"
 
 @app.route('/get_price')
 def get_price():
@@ -13,35 +16,31 @@ def get_price():
     if not keyword:
         return jsonify({"name": "No Item", "price": 0, "imgUrl": ""})
 
-    url = f"https://msearch.shopping.naver.com/search/all?query={keyword}"
+    # 네이버 정식 쇼핑 검색 API 주소
+    url = f"https://openapi.naver.com/v1/search/shop.json?query={keyword}&display=1"
+    
     headers = {
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1",
-        "Referer": "https://m.naver.com/"
+        "X-Naver-Client-Id": NAVER_CLIENT_ID,
+        "X-Naver-Client-Secret": NAVER_CLIENT_SECRET
     }
 
     try:
-        res = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers, timeout=5)
+        data = response.json()
         
-        # [핵심] 네이버 쇼핑이 숨겨둔 진짜 데이터 뭉치(__NEXT_DATA__)를 통째로 낚아챕니다.
-        match = re.search(r'id="__NEXT_DATA__" type="application/json">({.*?})</script>', res.text)
+        if 'items' in data and len(data['items']) > 0:
+            item = data['items'][0]
+            # lprice가 최저가입니다. <b> 태그는 제거합니다.
+            return jsonify({
+                "name": item['title'].replace('<b>', '').replace('</b>', ''),
+                "price": int(item['lprice']),
+                "imgUrl": item['image']
+            })
         
-        if match:
-            all_data = json.loads(match.group(1))
-            # 데이터 뭉치 안에서 가격과 이미지 경로를 차례로 타고 들어갑니다.
-            products = all_data['props']['pageProps']['initialState']['products']['list']
-            if products:
-                top_product = products[0]['item']
-                return jsonify({
-                    "name": top_product['productName'],
-                    "price": int(top_product['lowPrice']),
-                    "imgUrl": top_product['imageUrl']
-                })
-        
-        return jsonify({"name": keyword, "price": 0, "imgUrl": "", "msg": "데이터 구조 찾기 실패"})
+        return jsonify({"name": keyword, "price": 0, "imgUrl": "", "msg": "검색 결과 없음"})
     except Exception as e:
         return jsonify({"name": keyword, "price": 0, "imgUrl": "", "error": str(e)})
 
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
