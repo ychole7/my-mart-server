@@ -7,8 +7,8 @@ app = Flask(__name__)
 CORS(app)
 
 # ⚠️ 본인의 API 키를 그대로 유지하세요!
-NAVER_CLIENT_ID = "발급받은_ID"
-NAVER_CLIENT_SECRET = "발급받은_Secret"
+NAVER_CLIENT_ID = "JVXLTxKKG6ETmKg6Bo0V"
+NAVER_CLIENT_SECRET = "9JqlY6N21r"
 
 @app.route('/get_price')
 def get_price():
@@ -43,3 +43,4 @@ def get_price():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
+
