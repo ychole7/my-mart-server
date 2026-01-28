@@ -76,3 +76,4 @@ if __name__ == "__main__":
     # Render 환경에서 포트를 자동으로 잡아주도록 설정
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
+
