@@ -6,18 +6,18 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# ⚠️ 여기에 본인이 발급받은 키를 넣으세요!
-NAVER_CLIENT_ID = "JVXLTxKKG6ETmKg6Bo0V"
-NAVER_CLIENT_SECRET = "9JqlY6N21r"
+# ⚠️ 본인의 API 키를 그대로 유지하세요!
+NAVER_CLIENT_ID = "발급받은_ID"
+NAVER_CLIENT_SECRET = "발급받은_Secret"
 
 @app.route('/get_price')
 def get_price():
     keyword = request.args.get('item', '')
     if not keyword:
-        return jsonify({"name": "No Item", "price": 0, "imgUrl": ""})
+        return jsonify([])
 
-    # 네이버 정식 쇼핑 검색 API 주소
-    url = f"https://openapi.naver.com/v1/search/shop.json?query={keyword}&display=1"
+    # display=10: 검색 결과 10개를 가져옵니다.
+    url = f"https://openapi.naver.com/v1/search/shop.json?query={keyword}&display=10"
     
     headers = {
         "X-Naver-Client-Id": NAVER_CLIENT_ID,
@@ -25,21 +25,20 @@ def get_price():
     }
 
     try:
-        response = requests.get(url, headers=headers, timeout=5)
+        response = requests.get(url, headers=headers)
         data = response.json()
         
-        if 'items' in data and len(data['items']) > 0:
-            item = data['items'][0]
-            # lprice가 최저가입니다. <b> 태그는 제거합니다.
-            return jsonify({
-                "name": item['title'].replace('<b>', '').replace('</b>', ''),
-                "price": int(item['lprice']),
-                "imgUrl": item['image']
-            })
-        
-        return jsonify({"name": keyword, "price": 0, "imgUrl": "", "msg": "검색 결과 없음"})
-    except Exception as e:
-        return jsonify({"name": keyword, "price": 0, "imgUrl": "", "error": str(e)})
+        results = []
+        if 'items' in data:
+            for item in data['items']:
+                results.append({
+                    "name": item['title'].replace('<b>', '').replace('</b>', ''),
+                    "price": int(item['lprice']),
+                    "imgUrl": item['image']
+                })
+        return jsonify(results) # 10개의 리스트를 보냅니다.
+    except:
+        return jsonify([])
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
