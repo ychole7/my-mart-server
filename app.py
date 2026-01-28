@@ -7,15 +7,15 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-NAVER_CLIENT_ID = "본인의_ID"
-NAVER_CLIENT_SECRET = "본인의_Secret"
+NAVER_CLIENT_ID = "JVXLTxKKG6ETmKg6Bo0V"
+NAVER_CLIENT_SECRET = "9JqlY6N21r"
 
 # [기능 1] 검색어에 따른 10개 리스트 가져오기
 @app.route('/search_list')
 def search_list():
     keyword = request.args.get('item', '')
     url = f"https://openapi.naver.com/v1/search/shop.json?query={keyword}&display=10"
-    headers = {"X-Naver-Client-Id": JVXLTxKKG6ETmKg6Bo0V, "X-Naver-Client-Secret": 9JqlY6N21r}
+    headers = {"X-Naver-Client-Id": NAVER_CLIENT_ID, "X-Naver-Client-Secret": NAVER_CLIENT_SECRET}
     try:
         res = requests.get(url, headers=headers)
         items = res.json().get('items', [])
